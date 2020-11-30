@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"bufio"
 	"fmt"
 	"io"
@@ -15,10 +16,9 @@ var low = strings.ToLower
 var saveBm = ""
 
 func uci(input chan string) {
-	fmt.Println("info string initializing uci interface")
+	fmt.Println("info string initializing uci interface...")
 
 	toEng, frEng := engine()
-	bInfinite := false
 	var cmd string
 	var bm string
 	quit := false
@@ -27,7 +27,7 @@ func uci(input chan string) {
 		case cmd = <-input:
 			//			tell("info string uci got ", cmd, "\n")
 		case bm = <-frEng:
-			handleBm(bm, bInfinite)
+			handleBm(bm)
 			continue
 		}
 		words := strings.Split(cmd, " ")
@@ -49,19 +49,21 @@ func uci(input chan string) {
 		case "register":
 			handleRegister(words)
 		case "go":
-			handleGo(words)
+			handleGo(toEng,words)
 		case "ponderhit":
 			handlePonderhit()
 		case "stop":
-			handleStop(toEng, &bInfinite)
+			handleStop(toEng)
 		case "quit", "q":
-			handleQuit(toEng)
+			handleQuit()
 			quit = true
 			continue
 		case "pb":
 			board.Print()
 		case "pbb":
 			board.printAllBB()
+		case "pm":
+			board.printAllLegals()
 		default:
 			tell("info string unknown cmd ", cmd)
 		}
@@ -71,8 +73,8 @@ func uci(input chan string) {
 }
 
 func handleUci() {
-	tell("id name deltapawn")
-	tell("id author Ian Pratt")
+	tell("id name GoBit")
+	tell("id author Carokanns")
 
 	tell("option name Hash type spin default 128 min 16 max 1024")
 	tell("option name Threads type spin default 1 min 1 max 16")
@@ -89,6 +91,7 @@ func handleNewgame() {
 
 func handlePosition(cmd string) {
 	// position [fen <fenstring> | startpos ]  moves <move1> .... <movei>
+	board.newGame()
 	cmd = trim(strings.TrimPrefix(cmd, "position"))
 	parts := strings.Split(cmd, "moves")
 	if len(cmd) == 0 || len(parts) > 2 {
@@ -111,36 +114,35 @@ func handlePosition(cmd string) {
 	// Now parts[0] is the fen-string only
 
 	// start the parsing
-	fmt.Printf("info string parse %#v\n", parts[0])
+	//fmt.Printf("info string parse %#v\n", parts[0])
 	parseFEN(parts[0])
 
 	if len(parts) == 2 {
 		parts[1] = low(trim(parts[1]))
-		fmt.Printf("info string parse %#v\n", parts[1])
+		//fmt.Printf("info string parse %#v\n", parts[1])
 		parseMvs(parts[1])
 	}
 }
 
-func handleStop(toEng chan string, bInfinite *bool) {
-	if *bInfinite {
+func handleStop(toEng chan bool) {
+	if limits.infinite {
 		if saveBm != "" {
 			tell(saveBm)
 			saveBm = ""
 		}
 
-		toEng <- "stop"
-		*bInfinite = false
+		limits.setStop(true)
+		limits.setInfinite(false)
 	}
-	tell("info string stop not implemented")
 }
 
 // handleQuit not really necessary
-func handleQuit(toEng chan string) {
-	toEng <- "stop"
+func handleQuit() {
+	
 }
 
-func handleBm(bm string, bInfinite bool) {
-	if bInfinite {
+func handleBm(bm string) {
+	if limits.infinite {
 		saveBm = bm
 		return
 	}
@@ -155,8 +157,9 @@ func handleSetOption(words []string) {
 
 // go  searchmoves <move1-moveii>/ponder/wtime <ms>/ btime <ms>/winc <ms>/binc <ms>/movestogo <x>/
 //     depth <x>/nodes <x>/movetime <ms>/mate <x>/infinite
-func handleGo(words []string) {
-	// TODO: Start with moeveTime and infinite
+func handleGo(toEng chan bool, words []string) {
+	// TODO: Start with moveTime and infinite
+	limits.init()
 	if len(words) > 1 {
 		words[1] = trim(low(words[1]))
 		switch words[1] {
@@ -179,11 +182,18 @@ func handleGo(words []string) {
 		case "nodes":
 			tell("info string go nodes not implemented")
 		case "movetime":
-			tell("info string go movetime not implemented")
+			mt,err := strconv.Atoi(words[2])
+			if err!=nil{
+				tell("info string ",words[2]," not numeric")
+				return
+			}
+			limits.setMoveTime(mt)
+			toEng<-true
 		case "mate": // mate <x>  mate in x moves
 			tell("info string go mate not implemented")
 		case "infinite":
-			tell("info string go infinite not implemented")
+			limits.setInfinite(true)
+			toEng<-true
 		case "register":
 			tell("info string go register not implemented")
 		default:

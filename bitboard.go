@@ -1,6 +1,3 @@
-// this is the bitboard representation of the board
-// and all of its pieces
-
 package main
 
 import (
@@ -15,16 +12,16 @@ func (b bitBoard) count() int {
 	return bits.OnesCount64(uint64(b))
 }
 
-func (b *bitBoard) set(pos uint) {
-	*b |= bitBoard(uint64(1) << pos)
+func (b *bitBoard) set(pos int) {
+	*b |= bitBoard(uint64(1) << uint(pos))
 }
 
-func (b bitBoard) test(pos uint) bool {
-	return (b & bitBoard(uint64(1)<<pos)) != 0
+func (b bitBoard) test(pos int) bool {
+	return (b & bitBoard(uint64(1)<<uint(pos))) != 0
 }
 
-func (b *bitBoard) clr(pos uint) {
-	*b &= bitBoard(^(uint64(1) << pos))
+func (b *bitBoard) clr(pos int) {
+	*b &= bitBoard(^(uint64(1) << uint(pos)))
 }
 
 func (b *bitBoard) firstOne() int {
@@ -42,9 +39,8 @@ func (b *bitBoard) lastOne() int {
 		return 64
 	}
 	*b = (*b << uint(bit+1)) >> uint(bit+1)
-	return 63 - bit
+	return 63-bit
 }
-
 
 // returns the full bitstring (with leading zeroes) of the bitBoard
 func (b bitBoard) String() string {

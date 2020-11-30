@@ -9,8 +9,12 @@ func main() {
 }
 
 func init() {
-    initFenSq2Int()
+
+	initFenSq2Int()
 	initMagic()
-    initAtksKings()
-    initAtksKnights()
+	initAtksKings()
+	initAtksKnights()
+	initCastlings()
+	pSqInit()
+	board.newGame()
 }
