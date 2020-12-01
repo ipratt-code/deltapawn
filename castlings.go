@@ -1,9 +1,7 @@
-// this program is the castling logic for the board
-// to make sure we can castle properly
 package main
 
 import (
-	"fmt"
+	
 	"strings"
 )
 
@@ -19,7 +17,7 @@ const (
 type castlOptions struct {
 	short                                uint // flag
 	long                                 uint // flag
-	rook                                 int  // rook p12 (wR/bR)
+	rook                                 int  // rook pc (wR/bR)
 	kingPos                              int  // king pos
 	rookSh                               uint // rook pos short
 	rookL                                uint // rook pos long
@@ -96,7 +94,6 @@ func parseCastlings(fenCastl string) castlings {
 }
 
 func initCastlings() {
-	fmt.Println("init castlings")
 	// squares between K and R short castling
 	castl[WHITE].betweenSh.set(F1)
 	castl[WHITE].betweenSh.set(G1)
