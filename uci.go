@@ -229,15 +229,15 @@ func handleGo(toEng chan bool, words []string) {
 		case "ponder":
 			tell("info string go ponder not implemented")
 		case "wtime":
-			tell("info string go wtime not implemented")
+			tell("99")
 		case "btime":
-			tell("info string go btime not implemented")
+			tell("99")
 		case "winc":
-			tell("info string go winc not implemented")
+			tell("99")
 		case "binc":
-			tell("info string go binc not implemented")
+			tell("99")
 		case "movestogo":
-			tell("info string go movestogo not implemented")
+			tell("99")
 		case "depth":
 			d := -1
 			err := error(nil)

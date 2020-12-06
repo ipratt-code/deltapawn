@@ -1479,7 +1479,9 @@ func parseFEN(FEN string) {
 			board.stm = WHITE
 		}
 	}
-	if board.stm==BLACK {board.key = ^board.key}
+	if board.stm == BLACK {
+		board.key = ^board.key
+	}
 
 	// castling
 	board.castlings = 0

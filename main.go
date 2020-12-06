@@ -5,11 +5,11 @@ import (
 )
 
 func main() {
-	tell("info string Starting GoBit")
+	tell("info string Starting deltapawn...")
 
 	uci(input())
 
-	tell("info string quits GOBIT")
+	tell("info string quits deltapawn...")
 }
 
 func init() {

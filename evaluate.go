@@ -1,10 +1,28 @@
 package main
 
+import (
+	//"fmt"
+	"math/bits"
+)
+
 const (
 	maxEval  = +10000
 	minEval  = -maxEval
 	mateEval = maxEval + 1
 	noScore  = minEval - 1
+)
+
+// files for the chess board mainly for deducing pawn structure
+const (
+	aFile   = bitBoard(0x0101010101010101)
+	bFile   = bitBoard(0x0202020202020202)
+	cFile   = bitBoard(0x0404040404040404)
+	dFile   = bitBoard(0x0808080808080808)
+	eFile   = bitBoard(0x1010101010101010)
+	fFile   = bitBoard(0x2020202020202020)
+	gFile   = bitBoard(0x4040404040404040)
+	hFile   = bitBoard(0x8080808080808080)
+	fileNum = 8
 )
 
 var pieceVal = [16]int{100, -100, 325, -325, 350, -350, 500, -500, 950, -950, 10000, -10000, 0, 0, 0, 0}
@@ -22,9 +40,38 @@ const longDiag = 10
 // Piece Square Table
 var pSqTab [12][64]int
 
+// count how many ones there are in the bitboard
+
 //TODO: eval hash
 //TODO: pawn hash
 //TODO: pawn structures. isolated, backward, duo, passed (guarded and not), double and more...
+//first punish many pawns on one file
+func pawnStructEval(b *boardStruct) int {
+	eval := 0
+	wpBB := b.pieceBB[Pawn] & b.wbBB[WHITE]
+	bpBB := b.pieceBB[Pawn] & b.wbBB[BLACK]
+
+	eval += (bits.OnesCount64(uint64(wpBB&aFile)) - 1) * (pieceVal[0] / 2)
+	eval += (bits.OnesCount64(uint64(wpBB&bFile)) - 1) * (pieceVal[0] / 2)
+	eval += (bits.OnesCount64(uint64(wpBB&cFile)) - 1) * (pieceVal[0] / 2)
+	eval += (bits.OnesCount64(uint64(wpBB&dFile)) - 1) * (pieceVal[0] / 2)
+	eval += (bits.OnesCount64(uint64(wpBB&eFile)) - 1) * (pieceVal[0] / 2)
+	eval += (bits.OnesCount64(uint64(wpBB&fFile)) - 1) * (pieceVal[0] / 2)
+	eval += (bits.OnesCount64(uint64(wpBB&gFile)) - 1) * (pieceVal[0] / 2)
+	eval += (bits.OnesCount64(uint64(wpBB&hFile)) - 1) * (pieceVal[0] / 2)
+
+	eval += (bits.OnesCount64(uint64(bpBB&aFile)) - 1) * (pieceVal[1] / 2)
+	eval += (bits.OnesCount64(uint64(bpBB&bFile)) - 1) * (pieceVal[1] / 2)
+	eval += (bits.OnesCount64(uint64(bpBB&cFile)) - 1) * (pieceVal[1] / 2)
+	eval += (bits.OnesCount64(uint64(bpBB&dFile)) - 1) * (pieceVal[1] / 2)
+	eval += (bits.OnesCount64(uint64(bpBB&eFile)) - 1) * (pieceVal[1] / 2)
+	eval += (bits.OnesCount64(uint64(bpBB&fFile)) - 1) * (pieceVal[1] / 2)
+	eval += (bits.OnesCount64(uint64(bpBB&gFile)) - 1) * (pieceVal[1] / 2)
+	eval += (bits.OnesCount64(uint64(bpBB&hFile)) - 1) * (pieceVal[1] / 2)
+
+	return eval
+}
+
 //TODO: bishop pair
 //TODO: King safety. pawn shelter, guarding pieces
 //TODO: King attack. Attacking area surrounding the enemy king, closeness to the enemy king
@@ -42,6 +89,7 @@ func evaluate(b *boardStruct) int {
 		ev += pieceVal[pc]
 		ev += pcSqScore(pc, sq)
 	}
+	ev += pawnStructEval(b)
 	return ev
 }
 
